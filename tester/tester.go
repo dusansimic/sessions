@@ -231,11 +231,10 @@ func Options(t *testing.T, newStore storeFactory) {
 
 }
 
-func Many(t *testing.T, newStore storeFactory) {
+func manyTest(t *testing.T, s gin.HandlerFunc) {
 	r := gin.Default()
-	sessionNames := []string{"a", "b"}
 
-	r.Use(sessions.SessionsMany(sessionNames, newStore(t)))
+	r.Use(s)
 
 	r.GET("/set", func(c *gin.Context) {
 		sessionA := sessions.DefaultMany(c, "a")
@@ -271,5 +270,21 @@ func Many(t *testing.T, newStore storeFactory) {
 	req2, _ := http.NewRequest("GET", "/get", nil)
 	req2.Header.Set("Cookie", res1.Header().Get("Set-Cookie"))
 	r.ServeHTTP(res2, req2)
+}
 
+func Many(t *testing.T, newStore storeFactory) {
+	sessionNames := []string{"a", "b"}
+
+	s := sessions.SessionsMany(sessionNames, newStore(t))
+
+	manyTest(t, s)
+}
+
+func Map(t *testing.T, newStore storeFactory) {
+	s := sessions.SessionsMap(map[string]sessions.Store{
+		"a": newStore(t),
+		"b": newStore(t),
+	})
+
+	manyTest(t, s)
 }
